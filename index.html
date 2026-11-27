@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Customer Health Dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f2f5f7;--surface:#fff;--ink:#12212b;--mute:#5b6b76;--line:#d9e1e6;--good:#1f8a5b;--warn:#b57a00;--bad:#c23b2a;--accent:#12212b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1a21;--surface:#17252e;--ink:#e8eff3;--mute:#9bacb7;--line:#2a3b46;--good:#3fc088;--warn:#e2a93a;--bad:#ef6a58;--accent:#e8eff3}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1a21;--surface:#17252e;--ink:#e8eff3;--mute:#9bacb7;--line:#2a3b46;--good:#3fc088;--warn:#e2a93a;--bad:#ef6a58;--accent:#e8eff3}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Instrument Sans",system-ui,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.6rem;line-height:1.15;margin:0 0 6px;font-weight:700}
+.sub{color:var(--mute);margin:0 0 18px;font-size:.95rem}
+.risk{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--bad);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.95rem}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.tab{font:inherit;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:10px 4px;cursor:pointer;text-align:center}
+.tab b{display:block;font-size:1.35rem}
+.tab span{font-size:.78rem;color:var(--mute)}
+.tab[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.tab:focus-visible,.row:focus-visible,.copy:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.acct{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.row{all:unset;box-sizing:border-box;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;width:100%;padding:14px;cursor:pointer}
+.name{font-weight:600}
+.meta{color:var(--mute);font-size:.85rem}
+.score{font-size:1.5rem;font-weight:700;text-align:right}
+.badge{font-size:.8rem;font-weight:600;text-align:right}
+.bar{grid-column:1/-1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px}
+.Healthy{color:var(--good)}.Watch{color:var(--warn)}.At-risk{color:var(--bad)}
+.bg-Healthy{background:var(--good)}.bg-Watch{background:var(--warn)}.bg-At-risk{background:var(--bad)}
+.detail{display:none;padding:0 14px 16px;border-top:1px solid var(--line)}
+.acct.open .detail{display:block}
+.factors{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:12px 0;font-size:.88rem}
+.factors div{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding-bottom:3px}
+h2{font-size:1rem;margin:14px 0 6px}
+pre{white-space:pre-wrap;font:inherit;font-size:.92rem;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;margin:0;max-width:65ch}
+.copy{font:inherit;font-weight:600;margin-top:10px;background:var(--accent);color:var(--bg);border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
+.how{color:var(--mute);font-size:.85rem;margin-top:22px}
+</style>
+</head>
+<body>
+<main>
+<h1>Customer health dashboard</h1>
+<p class="sub">Sample data for 10 fictional SaaS accounts. Tap an account to see why it scored that way and get a ready-to-send email.</p>
+<div class="risk" id="risk"></div>
+<div class="tabs" id="tabs"></div>
+<div id="list"></div>
+<p class="how">How scoring works: seat usage 40%, NPS 25%, open support tickets 20%, days since last login 15%. Healthy is 70 or above, Watch is 45 to 69, At risk is below 45. Within each group, accounts are listed by estimated loss, largest first. Estimated loss is annual revenue × (100 minus the score)%, a rough guide and not a forecast. Suggested discounts assume a 25% profit margin: riskier accounts get a larger offer, never above 10%. A discount always trims the margin on that account, so it is worth offering only if it keeps enough accounts. All data and revenue figures are fictional.</p>
+</main>
+<script>
+const DATA=[
+{n:"Kwame Logistics",c:"Ama Boateng",u:88,nps:9,t:0,d:1,r:140},
+{n:"Lagos Fresh Foods",c:"Tunde Adeyemi",u:34,nps:4,t:4,d:19,r:21},
+{n:"Nordlicht GmbH",c:"Lena Vogel",u:72,nps:8,t:1,d:3,r:75},
+{n:"Savanna Pay",c:"Efua Mensah",u:51,nps:6,t:2,d:9,r:38},
+{n:"Atlas Retail UK",c:"James Whitfield",u:19,nps:3,t:5,d:27,r:14},
+{n:"Bluebird Studio",c:"Maya Chen",u:93,nps:10,t:0,d:0,r:200},
+{n:"Cedar Health Co",c:"Omar Haddad",u:60,nps:7,t:3,d:6,r:52},
+{n:"Harvest Mobile",c:"Ngozi Okeke",u:41,nps:5,t:2,d:14,r:29},
+{n:"Pinnacle Tutors",c:"Sam Rivera",u:79,nps:9,t:1,d:2,r:90},
+{n:"Rivergate Foods",c:"Kofi Asante",u:27,nps:4,t:3,d:21,r:33}];
+const ARR={"Kwame Logistics":48000,"Lagos Fresh Foods":36000,"Nordlicht GmbH":72000,"Savanna Pay":54000,"Atlas Retail UK":96000,"Bluebird Studio":30000,"Cedar Health Co":42000,"Harvest Mobile":28000,"Pinnacle Tutors":24000,"Rivergate Foods":60000};
+const money=n=>"$"+n.toLocaleString("en-US");
+function calc(a){const f={usage:a.u,nps:a.nps*10,tickets:Math.max(0,100-a.t*20),login:Math.max(0,100-a.d*3.3)};
+const s=Math.round(f.usage*.4+f.nps*.25+f.tickets*.2+f.login*.15);
+const st=s>=70?"Healthy":s>=45?"Watch":"At-risk";const dp=st==="At-risk"?Math.min(10,Math.round((100-s)*.12)):0,arr=ARR[a.n];return{...a,f,s,st,arr,loss:Math.round(arr*(100-s)/100),dp,disc:Math.round(arr*dp/100),mg:((25-dp)/(100-dp)*100).toFixed(1),be:Math.round(s*25/(25-dp))}}
+const RANK={"At-risk":0,"Watch":1,"Healthy":2};
+const A=DATA.map(calc).sort((x,y)=>RANK[x.st]-RANK[y.st]||y.loss-x.loss);
+let filter="All";
+function weakest(a){const w={usage:a.f.usage,nps:a.f.nps,tickets:a.f.tickets,login:a.f.login};return Object.keys(w).sort((x,y)=>w[x]-w[y])[0]}
+function email(a){const first=a.c.split(" ")[0],w=weakest(a);
+const hook={usage:"I noticed that only "+a.u+"% of your team’s seats were active recently, and I’d like to help more of your team get value from the product.",
+nps:"Your recent feedback told us we’re not meeting expectations yet, and I’d like to hear what would change that.",
+tickets:"I see you have "+a.t+" open support requests, and I’d like to make sure each one gets resolved quickly.",
+login:"It’s been "+a.d+" days since anyone logged in, so I wanted to check that everything is working for you."}[w];
+if(a.st==="Healthy")return "Subject: Quick thank-you from our team\n\nHi "+first+",\n\nYour team at "+a.n+" is getting great results with us, and I wanted to say thank you. If there’s a feature you’d like to see or a goal for next quarter, I’m happy to set up a 15-minute call.\n\nBest regards,\nJoyce";
+return "Subject: Let’s make sure "+a.n+" is getting value\n\nHi "+first+",\n\n"+hook+" Your renewal is in "+a.r+" days, so now is a good time to fix anything that isn’t working.\n\n"+(a.dp?"If you renew for 12 months, I can offer you "+a.dp+"% off. ":"")+"Could we have a 20-minute call this week? I’ll bring a short plan based on your account.\n\nBest regards,\nJoyce"}
+function render(){
+const cnt={All:A.length,Healthy:0,Watch:0,"At-risk":0};A.forEach(a=>cnt[a.st]++);
+const ar=A.filter(a=>a.st==="At-risk"),tot=ar.reduce((s,a)=>s+a.arr,0),ex=ar.reduce((s,a)=>s+a.loss,0),dt=ar.reduce((s,a)=>s+a.disc,0);
+document.getElementById("risk").innerHTML=`<b>${money(tot)}</b> in annual revenue is at risk across ${ar.length} accounts. Estimated loss without action: <b>${money(ex)}</b>. Suggested discounts total <b>${money(dt)}</b>.`;
+document.getElementById("tabs").innerHTML=["All","At-risk","Watch","Healthy"].map(k=>`<button class="tab" aria-pressed="${filter===k}" data-k="${k}"><b>${cnt[k]}</b><span>${k.replace("-"," ")}</span></button>`).join("");
+document.getElementById("list").innerHTML=A.filter(a=>filter==="All"||a.st===filter).map((a,i)=>`<div class="acct" id="a${i}"><button class="row" aria-expanded="false" data-i="${i}"><div><div class="name">${a.n}</div><div class="meta">${money(a.arr)} a year, renews in ${a.r} days</div></div><div><div class="score ${a.st}">${a.s}</div><div class="badge ${a.st}">${a.st.replace("-"," ")}</div></div><div class="bar"><i class="bg-${a.st}" style="width:${a.s}%"></i></div></button>
+<div class="detail"><div class="factors"><div><span>Seat usage</span><b>${a.u}%</b></div><div><span>NPS</span><b>${a.nps}/10</b></div><div><span>Open tickets</span><b>${a.t}</b></div><div><span>Days since login</span><b>${a.d}</b></div></div>
+<h2>Revenue at stake</h2><p style="margin:0">Annual revenue: <b>${money(a.arr)}</b>. Estimated loss without action: <b class="${a.st}">${money(a.loss)}</b>.</p>
+${a.dp?`<h2>Suggested retention offer</h2><p style="margin:0">Discount: <b>${a.dp}%</b> (${money(a.disc)} off, new price ${money(a.arr-a.disc)}). Profit margin after discount: <b>${a.mg}%</b>. The offer pays off if it gives at least a <b>${a.be}%</b> chance of keeping this account.</p>`:""}
+<h2>Suggested email to ${a.c}</h2><pre>${email(a)}</pre><button class="copy" data-e="${i}">Copy email</button></div></div>`).join("");
+}
+document.addEventListener("click",e=>{
+const t=e.target.closest(".tab");if(t){filter=t.dataset.k;render();return}
+const r=e.target.closest(".row");if(r){const p=r.parentElement,o=p.classList.toggle("open");r.setAttribute("aria-expanded",o);return}
+const c=e.target.closest(".copy");if(c){const list=A.filter(a=>filter==="All"||a.st===filter),a=list[c.dataset.e];
+try{navigator.clipboard.writeText(email(a)).then(()=>{c.textContent="Copied"}).catch(()=>{c.textContent="Select the text and copy it"})}catch(x){c.textContent="Select the text and copy it"}}});
+render();
+</script>
+</body>
+</html>
