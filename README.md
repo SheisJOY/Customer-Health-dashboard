@@ -18,7 +18,7 @@ CS teams often ask "which accounts should I call first?" This tool answers with 
 I built this by "vibe coding": I described the business problem and the changes I wanted in plain English, and Claude generated the code. I directed the product decisions, such as the scoring weights, ranking by revenue impact, and the discount guardrails.
 
 ## What I learned
-(Add 2 or 3 lines in your own words: what broke, what you changed, what you would add next.)
+Having my  Words perfectly translated into code is so cool. Will tweak some more as inspired.
 
 ## Note
 All accounts and revenue figures are fictional sample data.
