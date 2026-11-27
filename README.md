@@ -2,7 +2,7 @@
 
 A Customer Success tool that scores accounts, flags churn risk, quantifies the revenue at stake, and suggests a margin-aware retention offer with a ready-to-send email.
 
-**Live demo:** (paste your link here)
+**Live demo:** https://github.com/SheisJOY/Customer-Health-dashboard)
 
 ## The problem
 CS teams often ask "which accounts should I call first?" This tool answers with data and dollars instead of gut feeling.
